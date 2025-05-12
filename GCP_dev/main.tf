@@ -31,7 +31,7 @@ resource "google_compute_instance" "caeli-engine" {
         apt-get update && apt-get install -y python3 && sudo apt-get install -y git
         echo "Git instalado: $(git --version)" >> /var/log/Caeli.log
         cd /
-        git clone https://oauth2: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@github.com/mhgazz/Caeli_app.git
+        
         cd Caeli_app
         git checkout dev_1.0
         git fetch origin
