@@ -1,44 +1,3 @@
-provider "google" {
-  project = var.project_id
-  region = var.region
-  zone = var.zone
-}
-
-resource "google_compute_network" "caeli-vpc" {
-    name = "caeli-vpc"
-    auto_create_subnetworks = false
-    mtu = 1460
-}
-
-resource "google_compute_subnetwork" "caeli-subnet" {
-    name = "caeli-subnet"
-    ip_cidr_range = "10.0.1.0/24"
-    region = var.region
-    network = google_compute_network.caeli-vpc.id
-}
-
-resource "google_compute_instance" "caeli-engine" {
-    name = var.vm_core_name
-    machine_type = var.vm_core_type
-    zone = var.zone
-
-    boot_disk {
-      initialize_params {
-        image = "debian-cloud/debian-11"
-      }
-    }
-
-    network_interface {
-        subnetwork = google_compute_subnetwork.caeli-subnet.id
-        access_config { 
-
-        }
-    }
-
-    metadata = {
-        "vm_id" = "core vm"
-    }
-
     metadata_startup_script = <<-EOF
         #!/bin/bash
         echo "VM creada bajo el influjo de $(date)" >> /var/log/Caeli.log
@@ -64,27 +23,3 @@ resource "google_compute_instance" "caeli-engine" {
         #openssl s_client -showcerts -connect ssd.jpl.nasa.gov:443 < /dev/null | \awk '/BEGIN CERTIFICATE/,/END CERTIFICATE/ {print}' > nasa_ca.pem
         nohup python3 /Caeli_app/src/App.py >> /var/log/Caeli.log 2>&1 &
     EOF
-}
-
-resource "google_compute_firewall" "caeli-engine-firewall-tcp5000" {
-  name = "allow-caeli"
-  network = google_compute_network.caeli-vpc.id
-
-  allow {
-    protocol = "tcp"
-    ports = ["5000"]
-  }
-  source_ranges = ["0.0.0.0/0"]
-}
-
-resource "google_compute_firewall" "caeli-engine-firewall-ssh"{
-  name="allow-ssh"
-  allow {
-    protocol = "tcp"
-    ports = ["22"]
-  }
-  direction = "INGRESS"
-  network = google_compute_network.caeli-vpc.id
-  source_ranges = ["0.0.0.0/0"]
-}
-
